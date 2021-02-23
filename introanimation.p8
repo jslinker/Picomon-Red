@@ -1,41 +1,379 @@
 pico-8 cartridge // http://www.pico-8.com
 version 29
 __lua__
-#include px9_comp.lua
-#include px9_decomp.lua
 
 function _init()
-    -- Wipe the cartridge
-    for addr=0x0000, 0x3100 do
-        poke(addr, 0)
+    frameCounter = 0
+    animations = {}
+    local blank = {
+        duration = 160,
+        draw = function (frame)
+            rectfill(0,0,128,128,7)
+            if frame > 40 then
+                local x = 2
+                local y = 52
+                print("c'95. '96. '98. Nintendo",x,y,1)
+                print("c'95. '96. '98. Creatures inc.",x,y+8,1)
+                print("c'95. '96. '98. GAME FREAK inc.",x,y+16,1)
+            end
+        end
+    }
+    local gameFreak = {
+        duration = 240,
+        draw = function (frame)
+            rectfill(0,0,128,128,7)
+            rectfill(0,0,128,24,1)
+            rectfill(0,104,128,128,1)
+            if frame < 20 then return end
+            -- LOGO
+            if frame >= 70 then
+                pal(1, 6, 0)
+            else
+                pal()
+            end
+            sspr(8,8,16,24,58,48)
+            -- GAME FREAK
+            if frame >= 70 then
+                pal(1, 5, 0)
+            elseif frame > 60 then
+                pal(1, 6, 0)
+            else
+                pal()
+            end
+            -- GAME
+            sspr(24,24,32,8,24,72)
+            -- FREAK
+            spr(55,64,72)
+            spr(56,72,73)
+            spr(54,80,72)
+            spr(52,88,72)
+            spr(57,96,72)
+            -- Star (20 frames)
+            if frame < 60 then
+                local starProgress = (frame - 20) * 3
+                spr(19,120 - starProgress,starProgress,2,2)
+                return
+            elseif frame < 80 then
+                pal()
+                return
+            end
+            -- Twinkles
+            y = 80 + (frame - 80) / 3
+            -- Flashing on and off
+            if frame % 10 < 5 then 
+                palt(1,true) 
+            else
+                pal()
+            end
+
+            if frame < 140 then
+                spr(37,24,y)
+                spr(37,40,y)
+                spr(37,64,y)
+                spr(37,96,y)
+            end
+            -- More Twinkles
+            if frame > 104 and frame < 164 then
+                spr(37,32,y - 8)
+                spr(37,48,y - 8)
+                spr(37,72,y - 8)
+                spr(37,88,y - 8)
+            end
+            -- EVEN More Twinkles
+            if frame > 128 and frame < 188 then
+                spr(37,28,y - 16)
+                spr(37,52,y - 16)
+                spr(37,60,y - 16)
+                spr(37,74,y - 16)
+            end
+            -- Last Twinkles
+            if frame > 152 and frame < 212 then
+                spr(37,36,y - 24)
+                spr(37,68,y - 24)
+                spr(37,82,y - 24)
+                spr(37,90,y - 24)
+            end
+        end
+    }
+
+    local gengar1 = function(x, y)
+        spr(47,x+40,y)
+        spr(58,x,y+8,6,1)
+        spr(1,x+8,y+16,5,1)
+        spr(6,x,y+24,6,3)
+        spr(28, x + 48, y + 32, 1, 2)
     end
-    cstore(0x0000, 0x0000, 0x3000)
 
-    -- Load the spritesheet
-    local length = 0x2000
-    reload(0x0000, 0x0000, length, "introanimation.p8")
-
-    -- Read 128x128 pixels (2 bits each) from the sprite sheet into the map region
-    clen = px9_comp(0, 0, 128, 128, 0x2000, sget)
-
-    -- Save the compressed data to the map region
-    cstore(0x2000, 0x2000, clen)
-
-    -- Wipe the sprite sheet
-    for addr=0x0000, 0x1fff do
-        poke(addr, 0)
+    local gengar2 = function(x, y)
+        spr(13, x + 24, y)
+        spr(14, x + 40, y)
+        spr(45, x + 16, y + 8, 2, 1)
+        spr(29, x + 32, y + 8, 3, 1)
+        spr(121, x, y + 16, 3, 1)
+        spr(106, x + 32, y + 16, 2, 1)
+        spr(91, x + 48, y + 16)
+        spr(71, x, y + 24, 6, 4)
+        rectfill(x + 24, y + 16, x + 32, y + 24, 1)
+        rectfill(x + 40, y + 24, x + 48 , y + 32, 1)
+        rectfill(x + 32, y + 32, x + 40 , y + 40, 1)
+        rectfill(x + 24, y + 40, x + 40 , y + 47, 1)
+        rectfill(x + 16, y + 48, x + 40 , y + 55, 1)
     end
-    cstore(0x0000, 0x0000, 0x2)
+    
+    local gengar3 = function(x, y)
+        spr(86, x + 18, y + 16)
+        spr(76, x + 16, y + 24)
+        spr(147, x + 24, y + 24)
+        spr(161, x + 32, y + 24)
+        spr(176, x + 40, y + 24, 2, 1)
+        spr(77, x, y + 32, 3, 4)
+        spr(128, x + 24, y + 32, 4, 1)
+        spr(144, x + 24, y + 40, 3, 1)
+        spr(160, x + 24, y + 48, 4, 1)
+        spr(178, x + 40, y + 56, 2, 1)
+        rectfill(x + 31, y + 48, x + 39, y + 55, 1)
+        rectfill(x + 16, y + 56, x + 31, y + 63, 1)
+        spr(127, x + 32, y + 56)
+    end
 
-    -- Decompress back into the spritesheet and save it
-    px9_decomp(0, 0, 0x2000, sget, sset)
-    cstore(0x000, 0x000, 0x2000)
+    local nidorino1 = function(x, y)
+        spr(64,x+8,y)
+        spr(80,x+16,y)
+        spr(112,x+24,y)
+        spr(102,x+32,y)
+        spr(118,x+40,y)
+        spr(65,x+8,y+8,5,4)
+        spr(96,x,y+24)
+    end
 
-    -- -- Wipe the map region
-    -- for addr=0x2000, 0x2fff do
-    --     poke(addr, 0)
-    -- end
-    -- cstore(0x2000, 0x2000, 0x1000)
+    local nidorino2 = function(x, y)
+        spr(16, x, y)
+        spr(32, x + 8, y)
+        spr(48, x + 16, y)
+        spr(12, x + 24, y)
+        spr(132, x, y + 8, 5, 4)
+    end
+
+    local nidorino3 = function(x, y)
+        spr(193, x + 16, y, 3, 1)
+        spr(137, x, y + 16, 6, 4)
+        spr(143, x, y + 8)
+        spr(159, x + 8, y + 8)
+        spr(175, x + 16, y + 8)
+        spr(191, x + 24, y + 8)
+        spr(196, x + 32, y + 8)
+    end
+
+    local bars = function()
+        rectfill(0,0,128,24,1)
+        rectfill(0,104,128,128,1)
+    end
+
+    local fight = {
+        duration = 48,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+
+            -- Nidorino
+            local x = min(16 + frame, 64)
+            local y = 72
+            nidorino1(x, y)
+
+            -- Gengar
+            x = max(64 - frame, 16)
+            y = 56
+            gengar1(x, y)
+
+            -- Bars
+            bars()
+        end
+    }
+    local jumpLeft = {
+        duration = 28,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+
+            -- Nidorino
+            local step = flr(frame / 2)
+            local x = min(64 + step, 76)
+            local y = 72
+            if step < 6 then
+                y -= step
+            elseif step > 12 then
+                y = 72
+            else
+                y = 60 + step
+            end
+            nidorino1(x, y)
+
+            -- Gengar
+            x = 16
+            y = 56
+            gengar1(x, y)
+
+            -- Bars
+            bars()
+        end
+    }
+    local jumpRight = {
+        duration = 28,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+
+            -- Nidorino
+            local step = flr(frame / 2)
+            local x = max(76 - step, 64)
+            local y = 72
+            if step < 6 then
+                y -= step
+            elseif step > 12 then
+                y = 72
+            else
+                y = 60 + step
+            end
+            nidorino1(x, y)
+
+            -- Gengar
+            x = 16
+            y = 56
+            gengar1(x, y)
+
+            -- Bars
+            bars()
+        end
+    }
+    local gengarAttack = {
+        duration = 40,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+            nidorino1(64, 72)
+            gengar2(16 - min(4, frame / 2), 48)
+            bars()
+        end
+    }
+    local gengarSwing = {
+        duration = 24,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+            nidorino1(64, 72)
+            gengar3(16 + frame / 2, 40)
+            bars()
+        end
+    }
+    local swingRight = {
+        duration = 28,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+
+            -- Nidorino
+            local step = flr(frame / 2)
+            local x = min(64 + step, 76)
+            local y = 72
+            if step < 6 then
+                y -= step
+            elseif step > 12 then
+                y = 72
+            else
+                y = 60 + step
+            end
+            nidorino1(x, y)
+
+            -- Gengar
+            gengar3(28, 40)
+
+            -- Bars
+            bars()
+        end
+    }
+    local slideLeft = {
+        duration = 24,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+            nidorino2(82, 72)
+            gengar3(28 - frame / 2, 40)
+            bars()
+        end
+    }
+    local stareDown = {
+        duration = 24,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+            nidorino2(82, 72)
+            gengar1(16, 56)
+            bars()
+        end
+    }
+    local lower = {
+        duration = 32,
+        draw = function(frame)
+            rectfill(0,0,128,128,7)
+            nidorino2(82, min(72 + frame / 2, 76))
+            gengar1(16, 56)
+            bars()
+        end
+    }
+    local nidoAttack = {
+        duration = 48,
+        draw = function(frame)
+            if frame > 32 then
+                pal(1, 7)
+                pal(5, 7)
+                pal(6, 7)
+            elseif frame > 24 then
+                pal(1, 5)
+                pal(5, 7)
+                pal(6, 7)
+            elseif frame > 16 then
+                pal(1, 5)
+                pal(5, 6)
+                pal(6, 7)
+            end
+            rectfill(0,0,128,128,7)
+            local delta = min(frame / 2, 8)
+            nidorino3(64 - frame / 2, 48 - frame / 2)
+            gengar1(16, 56)
+            bars()
+        end
+    }
+    add(animations, blank)
+    add(animations, gameFreak)
+    add(animations, fight)
+    add(animations, jumpLeft)
+    add(animations, jumpRight)
+    add(animations, jumpLeft)
+    add(animations, jumpRight)
+    add(animations, gengarAttack)
+    add(animations, gengarSwing)
+    add(animations, swingRight)
+    add(animations, slideLeft)
+    add(animations, stareDown)
+    add(animations, jumpRight)
+    add(animations, jumpLeft)
+    add(animations, lower)
+    add(animations, nidoAttack)
+end
+
+function _update()
+    
+end
+
+function _draw()
+    cls()
+    pal()
+    -- Check if the current animation is done
+    if animations[1] ~= nil and frameCounter > animations[1].duration then
+        del(animations, animations[1])
+        frameCounter = 0
+    end
+    
+    if animations[1] == nil then
+        cls()
+        load("pokemon")
+        return
+    end
+
+    animations[1].draw(frameCounter)
+    frameCounter += 1
 end
 
 __gfx__
@@ -143,24 +481,3 @@ __gfx__
 00000000000000000000000005177750555100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000051000000000000517777100555100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000005177500000000051777777500551100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-__map__
-fffffff0ffff0f3b90fae72b00f96f0002c0fe81e89023e0023840ec07f0bf810c119907f2855f92182922bf60202734fc9d12928d41f88307f64713618710e04520e1d9b2cc92497ecc16662459fe2000ff7492313eb910c8b2b4e992449accff81c5ee6101e1076122645c720624215169b256f82f4b98257224327c8c3f12
-e10fc80b71d09974194fc07f9cf22ddc4cef86c57eb293c81283884a40e448fc2b47437e19ee05c31f013747d81669cc086992fca83f56f827c9f8872b730c199264f618c9d2e04ff053b2f0cb6c49fcc265e10ae19fa42adb26f949ca2f91bf8270149e48197f805f9ec69225c33f2625fc90283f60db4281031c3cfcb1c8fd
-4cbbe541e687466638a5594eae6c0b0dc2cbc54dc25d9323c92f429ec493a4f2712612166e6e800b3ce1484200f64753998c8f9b3b4b24fcc00dc68544a9dcfc109b62e1119cfc0159e20e380b0fc1300efe6d8a7070092eee3096e4175e7092854f2469f889fff82971c8f8817fc20f2b37e55d965390f0247b29c87024b9f9
-1f94ec4d72806b3a4cfe0aff24423696ede4bff041de4f00e1ca24116b63bea4151ce488ccd3b197ff0316be24e4186e9668e2649011b045b6c42ffc571859e596317e58910459094d0682e3000915f68bfc52702c046bc693eca01149441e92d0e08cb09b842bc90ffcc32024870ae1689291c8f161082a013838ec7fc6c13f
-c91cd9ece7cfb259fe7916b8280321e00c07021412c6419690e4c7c84c677937093748f8c282802020014f48c023488724f925b2826df9218370213c001d4248c006200100ae6f906524c915b91023ef0119e16084ffc041681056f816868585dfca9c8fb21cbc611ce400280378c2173e184b962084725c807786b187a3f010
-7e0a0709e10ab790256b90a6d2c4843d07485887700c573886f184318ea1854b8885d6329222930a2e5be6595aad4a5ab23413848dfc72a408b48385a74293e4886441e217223f1c121d4842ac5b978899bf8891151e2e4645162c19ce11229c498c3d624924bac50eb6fc96184b7c741807d82416c1c3c53769b24dd6c8a259
-96c3e88fb1a3f07130ae9059ad8b25f9b1b4e4b15ca98eda95f8712553656cc038078fd42672242e1eb2c66b1a3460fc6b89101c5c207cd4083a094e8ea918390e9926d34c12c2cfdb983938790962e49a04d7c8c1636bb615545611fc9b3879f918e89042f8c824b23ea2961c169d1c5720f9f352308b94da23c822924018cf
-01940dd7c81ff24c74e1b78364631d29e5171339c0139aac4c92d0acf9c281a360a9df9e0c2193879f0a0723a78038b8921e6d122c11a9d024b3d46f4b658b4b62172f48e24a90419aa609dd329624c71216813693234b3ce01b32b303cc9ef0109e340fac48021c2c8b4c0e1b8eb48b3470a8c432120de19168e491479fd419
-483948b641121e9e649a448e5932db826f11e2e04b220117b09942f9c39a5a921a0ec3b1469aa825722ce1d9967d4d64d5878ca198e94e4efecb84b7087dae267449922b1acd218f2acb93e63874a9ad61171b1369a21cf2146ebe0891b41689aa14f93251911f3a9963c97c0c61058c1f869bef8f4c2c609624a4c32539a848
-7236db62317c3cc3c1d8708416321c6c32a66359922549a45b32db22b6784e0806bc34840e4810263848f8d81a2609c910590d244902eb11e4b9125207e1a447e00a09225b49e1b74cb22065658e245bb68d4c565dd8228a5c828b873f0893c1f0134daba9b07429595844d7cd1a2c41974513b6e9e84a102e6ec22245f8d910
-223d964ecc1f5b001beb0a1c8a6fd37072228c842c848701e0cb7a24e964d33c1930699ea4175f92404e3bd2582d45424978f8f90a45b265ccd166ac0b02ceb4d774f849982e7281201cfc0fe410911c9290224c644424391257027f44929044922f8970c9cd1f479044244b98c6600bcf129a245d9363319c911ca858225712
-0817ff2e6958a5d20d0943b2629ac4a564cb8445d62a433611b992403878c30fd36896a9d62aa1dd48229144ed8751a92eba6479222148726128c235084f629948ed98c63a019a342210bbb365a95e0165e1928062182f0bcf32b5dfe5c2162fdb38c42259f81208238c1fc8ac4716d9c41689912494ac4959339e24b0440e21
-97b55d26a5257090ed394afbe36d804662518368137fb4d3019925fb67b466592d161efe8e5ca465064810fa644d878948332df1c7b61c09469639025be22f2a78e4598890afa143cc82996312fcb1498ea5e4087cc1809ff8e30bb0093b9298e5915ac28547127983451e22878878047ee28fccc3ec9834c966891ccb5830e5
-49422a87084786442a0ed9104bf2133fc4c6a1d7923c62c918210c8625136b38ba2c8945906cd0964c6892fc7244e80162979edc84251a14b9da2d4c57b2744f208e944802597f195b8747af26f225793a43b2cdf1105b16dacd329b6ba9ce218e652189882cbf34b657cf67828fa712211c78ba0d08c7529e4412c2ceb06d71
-24891fc4aca79c294b7cb3349b6332a148e5c9e0590446924ce2b3e7c88c242f4b7d76a67244e21a33cb8c4c0e15f274b67659248218d8c9932d074bcecce492530fb1f0d5ba4732066ba08f5958961849e2dfc622f52d92348f9d990ac9921cf2b20c23cf113a8834752d437e9a349cac5b1df66ba220bc26c91331e28d0026
-ab0099323abce21a4972c899e4887e49b22d6199679b26cbb5acd958902c2d241a22073f253b78e4922089699f43324912b2cda547a2596ccb842513cb2441b3661b5bb84cd336b1874b424496a7449b54d2caf24334c824eddaae4ab7482a09610c1244e2e4905f64893c2424ddd1b18859ee055922d51c9621da101396943a
-129b83819295646abf483082a8a4e90a124e23d926591a212145d4122999488e6dcb1e43269308a9e0878d8c1d13c9922533cb95f058922c84646c21cc36b4dbe86613122e317208fec0c2822425c4bc3619e221e248cc740b4722f288886489782cb661a3c311c37f2c58f08059242cb2c348e5088e2e49b6a50c8bb01c8158
-32c69a504958e410f2f2d08d25662b4b042004650702902844706d43f260231c497444ba5f3834b683982c13e25a37ebba9925b26ed9c8d2d221a231aa93d9a4924e6c1c69346bfe928fea846c5ae649d2ac491ced3299642e7d206c4b761c4dc8b1066b4cc821ffe87d26912d6b1a4912cb866d16a9fda4f431d6e821320415
-5afb893b441cd50d8b5878b6b0b4496bb67f3761436032e1b12ecb4fda58643471441c4d84b0a6c4b225e35fcc1c26134d96836dd9af597e3b926eba343f749164f9fd88452dc8224db1253f44267f4f0749647e586cd1bfc911ed9e51595e7b922416c8cf997ff9ff804bce4d1639127fdb92fcffff806ce1ffff030013feff
-be0962ff7f1d59a0c3ff3f9f4c2b18f9ffab93dc47225492d8ff3f7d92902f129605b2fcffd36dfdffffffffffff07100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
