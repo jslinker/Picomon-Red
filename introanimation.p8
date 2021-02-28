@@ -2,9 +2,17 @@ pico-8 cartridge // http://www.pico-8.com
 version 29
 __lua__
 
-function _init()
-    frameCounter = 0
-    animations = {}
+-- Tab 0 in this file is that animation itself
+-- Tab 1 in this file is the _update, _init, _draw used to run
+-- this file by itself.
+-- When #include-ing this file, just include tab 0 to avoid
+-- conflicts with _update/_init/_draw.
+
+introanimation = {}
+introanimation.isFinished = false
+function introanimation:init()
+    self.frameCounter = 0
+    self.animations = {}
     local blank = {
         duration = 160,
         draw = function (frame)
@@ -335,47 +343,62 @@ function _init()
             bars()
         end
     }
-    add(animations, blank)
-    add(animations, gameFreak)
-    add(animations, fight)
-    add(animations, jumpLeft)
-    add(animations, jumpRight)
-    add(animations, jumpLeft)
-    add(animations, jumpRight)
-    add(animations, gengarAttack)
-    add(animations, gengarSwing)
-    add(animations, swingRight)
-    add(animations, slideLeft)
-    add(animations, stareDown)
-    add(animations, jumpRight)
-    add(animations, jumpLeft)
-    add(animations, lower)
-    add(animations, nidoAttack)
+    add(self.animations, blank)
+    add(self.animations, gameFreak)
+    add(self.animations, fight)
+    add(self.animations, jumpLeft)
+    add(self.animations, jumpRight)
+    add(self.animations, jumpLeft)
+    add(self.animations, jumpRight)
+    add(self.animations, gengarAttack)
+    add(self.animations, gengarSwing)
+    add(self.animations, swingRight)
+    add(self.animations, slideLeft)
+    add(self.animations, stareDown)
+    add(self.animations, jumpRight)
+    add(self.animations, jumpLeft)
+    add(self.animations, lower)
+    add(self.animations, nidoAttack)
 end
 
-function _update()
+function introanimation:update()
     
 end
 
-function _draw()
+function introanimation:draw()
     cls()
     pal()
     -- Check if the current animation is done
-    if animations[1] ~= nil and frameCounter > animations[1].duration then
-        del(animations, animations[1])
-        frameCounter = 0
+    if self.animations[1] ~= nil and self.frameCounter > self.animations[1].duration then
+        del(self.animations, self.animations[1])
+        self.frameCounter = 0
     end
     
-    if animations[1] == nil then
+    if self.animations[1] == nil then
         cls()
-        load("pokemon")
+        self.isFinished = true
         return
     end
 
-    animations[1].draw(frameCounter)
-    frameCounter += 1
+    self.animations[1].draw(self.frameCounter)
+    self.frameCounter += 1
 end
 
+-->8
+-- This is tab 1
+function _init()
+    introanimation:init()
+end
+
+function _update()
+    introanimation:update()
+end
+
+function _draw()
+    introanimation:draw()
+end
+-->8
+-- This is tab 2
 __gfx__
 00000000015151515155565656565651515151511000000000000000011556565551515115151515515151110000000000000110000000000000000000000000
 00000000011515111555656565655515151515115000000000000005151565656555151551515151151115151000000000011771000000000000000000000000
