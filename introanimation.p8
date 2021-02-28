@@ -362,7 +362,9 @@ function introanimation:init()
 end
 
 function introanimation:update()
-    
+    if btnp(4) or btn(5) then
+        self.isFinished = true
+    end
 end
 
 function introanimation:draw()

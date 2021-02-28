@@ -21,8 +21,12 @@ function _update()
             px9_decomp(0, 0, 0x2000 + 2480, sget, sset)
             carousel:init()
         end
-    else
+    elseif carousel != nil then
         carousel:update()
+        if carousel.isFinished then
+            carousel = nil
+            load("pokemon")
+        end
     end
 
     -- if self.isFinished then

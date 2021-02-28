@@ -46,6 +46,9 @@ end
 
 function carousel:update()
     self.frame += 1
+    if btnp(4) or btn(5) then
+        self.isFinished = true
+    end
 end
 
 function carousel:draw()
